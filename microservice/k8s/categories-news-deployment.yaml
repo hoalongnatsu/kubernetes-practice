@@ -1,0 +1,57 @@
+# categories-news-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: categories-service
+  labels:
+    component: categories-service
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      component: categories-service
+  template:
+    metadata:
+      labels:
+        component: categories-service
+    spec:
+      imagePullSecrets:
+        - name: microservice-registry
+      containers:
+        - name: categories-service
+          image: registry.kala.ai/microservice/code
+          env:
+            - name: SERVICES
+              value: categories
+          envFrom:
+            - configMapRef:
+                name: microservice-cm
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-service
+  labels:
+    component: news-service
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      component: news-service
+  template:
+    metadata:
+      labels:
+        component: news-service
+    spec:
+      imagePullSecrets:
+        - name: microservice-registry
+      containers:
+        - name: news-service
+          image: registry.kala.ai/microservice/code
+          env:
+            - name: SERVICES
+              value: news
+          envFrom:
+            - configMapRef:
+                name: microservice-cm

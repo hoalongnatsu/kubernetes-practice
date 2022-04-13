@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-standby
+  labels:
+    component: postgres-standby
+spec:
+  selector:
+    matchLabels:
+      component: postgres-standby
+  serviceName: postgres-standby
+  template:
+    metadata:
+      labels:
+        component: postgres-standby
+    spec:
+      initContainers:
+        - name: busybox
+          image: busybox
+          command:
+            - sh
+            - -c
+            - "cp /var/config/postgresql.conf /var/lib/postgresql/data/postgresql.conf && cp /var/config/recovery.conf /var/lib/postgresql/data/recovery.conf"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+            - mountPath: /var/config/postgresql.conf
+              subPath: postgresql.conf
+              name: postgres-standby-cm
+            - mountPath: /var/config/recovery.conf
+              subPath: recovery.conf
+              name: postgres-standby-cm
+      containers:
+        - name: postgres
+          image: postgres:11
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+      volumes:
+        - name: postgres-standby-cm
+          configMap:
+            name: postgres-standby-cm
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: hostpath
+        resources:
+          requests:
+            storage: 5Gi

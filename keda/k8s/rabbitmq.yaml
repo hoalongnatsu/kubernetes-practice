@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq
+  labels:
+    component: rabbitmq
+data:
+  rabbitmq.conf: |
+    default_user = k8s-practice
+    default_pass = k8s-practice
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      component: rabbitmq
+  template:
+    metadata:
+      labels:
+        component: rabbitmq
+    spec:
+      containers:
+        - image: rabbitmq
+          name: rabbitmq
+          ports:
+            - containerPort: 5672
+          env:
+            - name: RABBITMQ_NODENAME
+              value: k8s-practice
+          volumeMounts:
+            - name: config
+              mountPath: /etc/rabbitmq
+      volumes:
+        - name: config
+          configMap:
+            name: rabbitmq
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    component: rabbitmq
+  ports:
+    - port: 5672

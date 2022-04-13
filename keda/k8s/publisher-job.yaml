@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rabbitmq-publish
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: rabbitmq-client
+        image: 080196/k8s-practice-keda-send
+        env:
+          - name: QUEUE_LENGTH
+            value: "50"
+        envFrom:
+          - configMapRef:
+              name: share-consume-queue

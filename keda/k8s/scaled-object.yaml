@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+data:
+  MQ_HOST: YW1xcDovL2s4cy1wcmFjdGljZTprOHMtcHJhY3RpY2VAcmFiYml0bXEuZGVmYXVsdDo1NjcyL3Zob3N0 # base64 encoded value of format amqp://k8s-practice:k8s-practice@rabbitmq:5672/vhost
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: rabbitmq-trigger-auth
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: rabbitmq-secret
+      key: MQ_HOST
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: share-consume-queue
+spec:
+  scaleTargetRef:
+    name: share-consume-queue
+  triggers:
+    - type: rabbitmq
+      metadata:
+        mode: QueueLength
+        queueName: scale_out
+        value: "5"
+        vhostName: /
+      authenticationRef:
+        name: rabbitmq-trigger-auth

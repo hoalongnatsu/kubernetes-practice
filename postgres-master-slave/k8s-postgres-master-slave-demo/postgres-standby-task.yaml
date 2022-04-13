@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-standby
+  labels:
+    component: postgres-standby
+spec:
+  selector:
+    matchLabels:
+      component: postgres-standby
+  serviceName: postgres-standby
+  template:
+    metadata:
+      labels:
+        component: postgres-standby
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:11
+          command:
+            [
+              "sh",
+              "-c",
+              'PGPASSWORD="postgres" pg_basebackup -h postgres-master -D /var/lib/standby-postgresql/data -U repuser -vP ',
+            ]
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/standby-postgresql/data
+              name: postgres-data
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: hostpath
+        resources:
+          requests:
+            storage: 5Gi

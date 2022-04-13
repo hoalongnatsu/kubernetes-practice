@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: share-consume-queue
+data:
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_USER: k8s-practice
+  RABBITMQ_PASS: k8s-practice
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: share-consume-queue
+  labels:
+    component: share-consume-queue
+spec:
+  selector:
+    matchLabels:
+      component: share-consume-queue
+  template:
+    metadata:
+      labels:
+        component: share-consume-queue
+    spec:
+      containers:
+        - name: share-consume-queue
+          image: 080196/k8s-practice-keda-consumer
+          envFrom:
+            - configMapRef:
+                name: share-consume-queue

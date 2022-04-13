@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  pg-master:
+    image: postgres:12
+    ports:
+      - 10432:5432
+    volumes:
+      - ./master/data:/var/lib/postgresql/data
+      - ./master/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+      - ./master/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    environment:
+      POSTGRES_PASSWORD: docker
+  pg-slave:
+    image: postgres:12
+    ports:
+      - 20432:5432
+    volumes:
+      - ./slave/data:/var/lib/postgresql/data
+      - ./slave/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+    environment:
+      POSTGRES_PASSWORD: docker
